@@ -4,6 +4,8 @@ const otpGenerator = require('otp-generator');
 const bcrypt = require('bcrypt');
 const Profile = require('../models/Profile');
 const jwt = require('jsonwebtoken');
+const mailSender = require('../utils/mailSender');
+
 
 require('dotenv').config();
 
@@ -256,3 +258,88 @@ exports.login = async (req, res) => {
         });
     }
 };
+//change password
+exports.changePassword = async (req, res)=>{
+    try {
+        const { email , oldPassword , newPassword , confirmNewPassword } = req.body;
+
+        if(!email || !oldPassword || !newPassword || !confirmNewPassword){
+            return res.status(400).json({
+                success:false,
+                message:"All fields are required"
+            });
+        }
+
+
+        if(oldPassword === newPassword){
+            return res.status(400).json({
+                success:false,
+                message:"New password cannot be same as old password"
+            });
+        }
+    
+        //fetch the user by db call
+        const user = await User.findOne({email});
+        if(!user){
+            return res.status(404).json({
+                success:false,
+                message:"User not found",
+            });
+        }
+        //check  : newPassword & confirmNewPassword match
+        if(newPassword !== confirmNewPassword){
+            return res.status(400).json({
+                    success: false,
+                    message: 'Password and ConfirmPassword values does not match, Please try again',
+            });
+        }
+        
+        //validate oldPassword
+        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+       
+        if(!isPasswordMatch){
+            return res.status(401).json({
+                    success: false,
+                    message: 'Password is incorrect',
+            });
+        }
+
+        //hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        //now update password inside the db
+        user.password = hashedPassword;
+        await user.save();
+
+        //send a mail to the user -(that password is changed) (email,title,body)
+        const mailResponse = await mailSender(
+            email,
+            "Password Changed Successfully",
+            `
+                <h2>Hello ${user.firstName},</h2>
+                <p>Your password has been <b>successfully updated</b>.</p>
+                <p>If you did not request this change, please reset your password immediately or contact support.</p>
+                <br/>
+                <p>Regards,<br>StudyNotion Team</p>
+            `
+        );
+
+        console.log("Email sent:", mailResponse);
+
+        return res.status(200).json({
+            success:true,
+            message:"Password changed successfully",
+        });
+
+
+    
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Something went wrong while changing password',
+        });
+    }
+    
+};
+ 
