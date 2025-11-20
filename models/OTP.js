@@ -8,11 +8,12 @@ const OTPSchema = new mongoose.Schema({
     otp:{
         type:String,
         required:true,
+        uniqu
     },
     createdAt:{
         type:Date,
         default:Date.now(),
-        expires:5*60,
+        expires:300,
     }
 });
 
