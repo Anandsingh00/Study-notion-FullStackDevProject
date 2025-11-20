@@ -2,76 +2,75 @@ const User = require('../models/User');
 const OTP = require('../models/OTP');
 const otpGenerator = require('otp-generator');
 const bcrypt = require('bcrypt');
-const Profile  = require('../models/Profile')
-//send otp
-exports.sendOTP= async(req,res)=>{
+const Profile = require('../models/Profile');
+const jwt = require('jsonwebtoken');
+
+require('dotenv').config();
+
+// send otp
+exports.sendOTP = async (req, res) => {
     try {
         // fetch email from req body
-        const {email} = req.body;
-        
-        if(!email){
-            return  res.status(400).json({
-                success:false,
-                message: "Email is required"
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required',
             });
         }
 
         // check if user has entered a valid email or not
-        const emailRegex =  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRegex.test(email)){
-            return  res.status(400).json({
-                success:false,
-                message: "Invalid email format"
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format',
             });
         }
 
+        const isUserExist = await User.findOne({ email });
 
-        const isUserExist = await User.findOne({email});
-    
-        //if user exist send a failure message
-        if(isUserExist){
-            return res.status().json({
-                success:false,
-                message:"User already exists"
-            })
+        // if user exist send a failure message
+        if (isUserExist) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists',
+            });
         }
-    
-        //generate the otp
-        var otp = otpGenerator.generate(6,{
-            upperCaseAlphabets:false,
-            lowerCaseAlphabets:false,
-            specialChars:false,
-        })
 
-        
-        // delete the old otps for the req email
-            await OTP.deleteMany({ email });
-
-
-         //save the otp to db
-        const otpBody = await OTP.create({ email, otp });
-        console.log("OTP Body: ",otpBody);
-
-         return res.status(200).json({
-            success: true,
-            message: "OTP sent successfully",
-            otp, // remove this in production
+        // generate the otp
+        const otp = otpGenerator.generate(6, {
+            upperCaseAlphabets: false,
+            lowerCaseAlphabets: false,
+            specialChars: false,
         });
 
-    } catch (error) {
+        // delete the old otps for the req email
+        await OTP.deleteMany({ email });
 
-        console.log("Error in sendOTP:", error);
+        // save the otp to db
+        const otpBody = await OTP.create({ email, otp });
+        console.log('OTP Body: ', otpBody);
+
+        return res.status(200).json({
+            success: true,
+            message: 'OTP sent successfully',
+            // otp, // remove this in production
+        });
+    } catch (error) {
+        console.log('Error in sendOTP:', error);
         return res.status(500).json({
             success: false,
-            message: "Error sending OTP",
+            message: 'Error sending OTP',
         });
     }
-}
+};
 
-//signup
-exports.signup = async (req,res)=>{
+// signup
+exports.signup = async (req, res) => {
     try {
-        //fetch the data from the request body
+        // fetch the data from the request body
         const {
             firstName,
             lastName,
@@ -80,103 +79,180 @@ exports.signup = async (req,res)=>{
             confirmPassword,
             accountType,
             contactNumber,
-            otp
+            otp,
         } = req.body;
-    
-        //validation
-        if(!firstName || !lastName || !email || !password || !confirmPassword || !otp){
-              return res.status(400).json({
-                success: false,
-                message: "All fields are required",
-            });
-        }
-    
-        if(password !== confirmPassword){
-            return res.status().json({
-                success:false,
-                message:"Password and ConfirmPassword values does not match, Please try again"
-            });
-        }
-    
-         //checking if the user has entered a valid phone number
-        const phoneRegex = /^(\+91[\-\s]?)?[6-9]\d{9}$/;
-        
-        if (!phoneRegex.test(contactNumber)) {
+
+        // validation
+        if (!firstName || !lastName || !email || !password || !confirmPassword || !otp || !contactNumber) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid phone number format",
+                message: 'All fields are required',
             });
         }
 
-        //check for existing user
-        const existingUser = await User.findOne({email});
-    
-        if(existingUser){
+        if (password !== confirmPassword) {
             return res.status(400).json({
-                success:false,
-                message:"User is already registered, Please login",
-            })
+                success: false,
+                message: 'Password and ConfirmPassword values does not match, Please try again',
+            });
         }
-    
-        //validate the otp
-        //find the otp from db
+
+        // checking if the user has entered a valid phone number
+        const phoneRegex = /^(\+91[\-\s]?)?[6-9]\d{9}$/;
+
+        if (!phoneRegex.test(contactNumber)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid phone number format',
+            });
+        }
+
+        // check for existing user
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'User is already registered, Please login',
+            });
+        }
+
+        // validate the otp
+        // find the otp from db
         const otpRecord = await OTP.findOne({ email });
         if (!otpRecord) {
             return res.status(400).json({
                 success: false,
-                message: "OTP not found or expired",
+                message: 'OTP not found or expired',
             });
         }
-    
-        //match it with request body
-        if (otpRecord.otp !== otp) {
+
+        // match it with request body
+        if (otpRecord.otp !== String(otp)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid OTP",
+                message: 'Invalid OTP',
             });
         }
-    
-        //delete otp after verification
+
+        // delete otp after verification
         await OTP.deleteMany({ email });
-        
-        //hash the password
-        const hashedPassword = await bcrypt.hash(password,10);
-    
-        //create db entry
+
+        // hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // create db entry
         const profileDetails = await Profile.create({
-            gender:null,
-            dateOfBirth:null,
-            about:null,
-            contactNumber
-        })
-    
+            gender: null,
+            dateOfBirth: null,
+            about: null,
+            contactNumber,
+        });
+
         const user = await User.create({
             firstName,
             lastName,
             email,
-            password:hashedPassword,
+            password: hashedPassword,
             accountType,
-            additionalDetails:profileDetails._id,
-            image: `https://api.dicebear.com/9.x/initials/svg?seed=${firstName} ${lastName}`
+            additionalDetails: profileDetails._id,
+            image: `https://api.dicebear.com/9.x/initials/svg?seed=${firstName} ${lastName}`,
         });
-    
-        //return  success response
+
+        // return success response
         return res.status(200).json({
-            success:true,
-            message:"User is registered successfully",
+            success: true,
+            message: 'User is registered successfully',
             user,
         });
-
-
     } catch (error) {
-        console.log("Something went wrong in signup function");
+        console.log('Something went wrong in signup function');
         console.log(error.message);
 
         return res.status(500).json({
-            success:false,
-            message:"User cannot be registered,Please  try again"
+            success: false,
+            message: 'User cannot be registered,Please  try again',
         });
     }
+};
 
-}
+// login
+exports.login = async (req, res) => {
+    try {
+        // fetch the data from req body
+        const { email, password } = req.body;
 
+        // validation
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'All fields are required,Please try again',
+            });
+        }
+
+        // validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format',
+            });
+        }
+
+        // find user
+        const user = await User.findOne({ email }).populate('additionalDetails');
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'User is not registered,Please create your account',
+            });
+        }
+
+        // match the password
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Password is incorrect',
+            });
+        }
+
+        const payload = {
+            email: user.email,
+            id: user._id,
+            role: user.accountType,
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: '2h',
+        });
+
+        const userData = user.toObject();
+        userData.token = token;
+        delete userData.password;
+
+        // create a cookie and send response
+        const cookieOptions = {
+            expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            secure: true,
+            sameSite: "None"
+        };
+
+        return res
+            .cookie('token', token, cookieOptions)
+            .status(200)
+            .json({
+                success: true,
+                token,
+                user: userData,
+                message: 'Logged In Successfully',
+            });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Login failure , please try again',
+        });
+    }
+};
