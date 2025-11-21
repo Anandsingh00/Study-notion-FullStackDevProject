@@ -108,7 +108,8 @@ exports.getAllCourses = async(req,res)=>{
                                                 instructor:true,
                                                 ratingAndReviews:true,
                                                 studentsEnrolled:true,
-                                                }).populate("instructor","firstName lastName email").exec(); 
+                                                })
+                                                .populate("instructor","firstName lastName email").exec(); 
         return res.status(200).json({
             success:true,
             message:"Data for all courses fetch  successfully",
