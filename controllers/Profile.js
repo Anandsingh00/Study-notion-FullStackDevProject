@@ -1,0 +1,102 @@
+const User = require("../models/User");
+const Profile = require("../models/Profile");
+
+exports.UpdateProfile = async ( req , res )=>{
+    try {
+        //get data
+        const { dateOfBirth , about, contactNumber , gender} = req.body;
+        //get userId
+        const id = req.user.id;
+        //validation
+        if(!contactNumber || !gender ||!id){
+            return res.status(400).json({
+                success:false,
+                message:"All fields are required"
+            });
+        }
+        //find profile
+        const userDetails = await User.findById(id);
+        const profileId = userDetails.additionalDetails;
+        const profileDetails = await Profile.findById(profileId);
+
+        if(dateOfBirth) profileDetails.dateOfBirth = dateOfBirth;
+        if(about) profileDetails.about = about;
+        if(contactNumber) profileDetails.contactNumber = contactNumber;
+        if(gender) profileDetails.gender = gender;
+        //save in Db
+        await profileDetails.save()
+
+        // send the response
+        return res.status(200).json({
+            success:true,
+            message:"Profile Updated Successfully",
+            profileDetails
+        })
+
+        //update profile
+    } catch (error) {
+        return res.status(500).json({
+            success:false,
+            message:"Something went wrong in Updating the profile"
+        })
+    }
+}
+
+exports.deleteAccount = async (req, res) => {
+    try {
+        const id = req.user.id;
+
+        const userDetails = await User.findById(id);
+        if (!userDetails) {
+            return res.status(400).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Schedule deletion for 5 days later
+        const deletionDate = new Date();
+        deletionDate.setDate(deletionDate.getDate() + 5);
+
+        userDetails.scheduledDeletion = deletionDate;
+        await userDetails.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Your account deletion is scheduled in 5 days",
+            deletionDate
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error scheduling account deletion"
+        });
+    }
+};
+
+
+
+exports.getAllUserDetails = async (req,res) => {
+    try {
+        //get id
+        const id = req.user.id;
+        //validation and get user details
+        const userDetails = await User.findById(id)
+        .populate("additionalDetails")
+        .exec();
+        console.log(userDetails);
+        
+        //return response
+        return res.status(200).json({
+            success:true,
+            message:"User Data Fetched Successfully",
+            data:userDetails
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success:false,
+            message:"Something went wrong in getAllDetails "+ error.message,
+        })
+    }
+}
