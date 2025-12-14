@@ -153,7 +153,7 @@ exports.getAllCourses = async (req, res) => {
 //getCourseDetails
 exports.getCourseDetails = async (req, res) => {
     try {
-        const { courseId } = req.params;
+        const { courseId } = req.body;
 
         // Validate ObjectId
         if (!mongoose.Types.ObjectId.isValid(courseId)) {

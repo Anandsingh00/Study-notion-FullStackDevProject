@@ -52,6 +52,7 @@ exports.capturePayment = async (req, res) => {
             amount,
             currency,
             receipt: `receipt_${Date.now()}`,
+            //used in verify signature
             notes: {
                 courseId: course_id,
                 userId: userId
@@ -83,7 +84,88 @@ exports.capturePayment = async (req, res) => {
 
 //verify signature of Razorpay and server
 exports.verifySignature =  async(req,res) => {
+        const webhookSecret = "123456";
+        const signature = req.headers["x-razorpay-signature"];
 
-}
+        const shasum = crypto.createHmac("sha256",webhookSecret);
+        shasum.update(jJSON.stringify(req.body));
+        const digest = shasum.digest("hex");
 
-//1.08
+        if(signature == digest){
+            console.log("Payment is authorised");
+            const {courseId, userId} = req.body.payload.payment.entity.notes;
+
+            try {
+                //fulfill the action 
+                const enrolledCourse = await Course.findOneAndUpdate(
+                                                    {_id: courseId},
+                                                    {$push:{studentsEnrolled: userId}},
+                                                    {new:true}
+                                                );
+                
+                if(!enrolledCourse){
+                    return res.status(500).json({
+                        success:false,
+                        message:"Course not Found"
+                    })
+                }
+
+
+                console.log(enrolledCourse);
+                
+                //find the course and enroll the student in it
+                const enrolledStudent = await User.findOneAndUpdate(
+                                                 {_id:userId},
+                                                 {$push:{courses:courseId}},
+                                                 {new:true},
+                );
+
+                console.log(enrolledStudent);
+
+                //mail send kardo
+                const emailResponse = await mailSender(
+                    enrolledStudent.email,
+                    "Congratulations",
+                    "You are enrolled in the course"
+                );
+                console.log(emailResponse);
+                return res.status(200).json({
+                    success:true,
+                    message:"Signature Verifed and course Added"
+                })
+
+            } catch (error) {
+                console.error("Error while verifying signature:", error);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Error while processing enrollment",
+                    error: error.message
+                });
+            }
+        }
+
+        else{
+            return res.json(400).json({
+                success:false,
+                message:"Invalid  request"
+            });
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+};
+
