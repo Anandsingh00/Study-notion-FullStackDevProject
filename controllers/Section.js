@@ -101,7 +101,6 @@ exports.deleteSection = async(req,res)=>{
 }
 
 
-
 exports.getSectionDetails = async (req,res) => {
     try {
         //fetch the id from req

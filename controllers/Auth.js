@@ -10,7 +10,7 @@ const mailSender = require('../utils/mailSender');
 require('dotenv').config();
 
 // send otp
-exports.sendOTP = async (req, res) => {
+exports.sendotp = async (req, res) => {
     try {
         // fetch email from req body
         const { email } = req.body;

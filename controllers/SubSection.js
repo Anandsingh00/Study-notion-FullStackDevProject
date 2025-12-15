@@ -167,8 +167,7 @@ exports.deleteSubSection = async (req, res) => {
         });
     }
 };
-
-
+//getAllSubSection
 exports.getAllSubSection = async ( req,res ) => {
      try {
         const subSections = await SubSection.find({});
