@@ -34,7 +34,7 @@ exports.deleteAccount = async (req, res) => {
     }
 };
 
-exports.UpdateProfile = async ( req , res )=>{
+exports.updateProfile = async ( req , res )=>{
     try {
         //get data
         const { dateOfBirth , about, contactNumber , gender} = req.body;

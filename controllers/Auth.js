@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const Profile = require('../models/Profile');
 const jwt = require('jsonwebtoken');
 const mailSender = require('../utils/mailSender');
+const {otpTemplate} = require("../mail/templates/emailVerificationTemplate");
 
 
 require('dotenv').config();
@@ -22,7 +23,7 @@ exports.sendotp = async (req, res) => {
             });
         }
 
-        // check if user has entered a valid email or not
+        //Validation for email:  check if user has entered a valid email or not
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({
@@ -47,6 +48,11 @@ exports.sendotp = async (req, res) => {
             lowerCaseAlphabets: false,
             specialChars: false,
         });
+        await mailSender(
+            email,
+            "Verification Email from StudyNotion",
+            otpTemplate(otp)
+        );
 
         // delete the old otps for the req email
         await OTP.deleteMany({ email });
@@ -85,7 +91,7 @@ exports.signup = async (req, res) => {
         } = req.body;
 
         // validation
-        if (!firstName || !lastName || !email || !password || !confirmPassword || !otp || !contactNumber) {
+        if (!firstName || !lastName || !email || !password || !confirmPassword || !otp ) {
             return res.status(400).json({
                 success: false,
                 message: 'All fields are required',
@@ -98,16 +104,18 @@ exports.signup = async (req, res) => {
                 message: 'Password and ConfirmPassword values does not match, Please try again',
             });
         }
+        console.log("Email received:", email);
+        console.log("OTP received:", otp);
 
         // checking if the user has entered a valid phone number
-        const phoneRegex = /^(\+91[\-\s]?)?[6-9]\d{9}$/;
+        // const phoneRegex = /^(\+91[\-\s]?)?[6-9]\d{9}$/;
 
-        if (!phoneRegex.test(contactNumber)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid phone number format',
-            });
-        }
+        // if (!phoneRegex.test(contactNumber)) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'Invalid phone number format',
+        //     });
+        // }
 
         // check for existing user
         const existingUser = await User.findOne({ email });
