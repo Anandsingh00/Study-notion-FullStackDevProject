@@ -2,7 +2,7 @@ const Course = require("../models/Course");
 const Category = require("../models/Category");
 const User = require("../models/User");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
-
+const mongoose = require('mongoose');
 // Function to create a new course
 exports.createCourse = async (req, res) => {
 	try {
@@ -25,20 +25,20 @@ exports.createCourse = async (req, res) => {
 		const thumbnail = req.files.thumbnailImage;
 
 		// Check if any of the required fields are missing
-		if (
-			!courseName ||
-			!courseDescription ||
-			!whatYouWillLearn ||
-			!price ||
-			!tag ||
-			!thumbnail ||
-			!category
-		) {
-			return res.status(400).json({
-				success: false,
-				message: "All Fields are Mandatory",
-			});
-		}
+		// if (
+		// 	!courseName ||
+		// 	!courseDescription ||
+		// 	!whatYouWillLearn ||
+		// 	!price ||
+		// 	!tag ||
+		// 	!thumbnail ||
+		// 	!category
+		// ) {
+		// 	return res.status(400).json({
+		// 		success: false,
+		// 		message: "All Fields are Mandatory",
+		// 	});
+		// }
 		if (!status || status === undefined) {
 			status = "Draft";
 		}
@@ -166,11 +166,11 @@ exports.getCourseDetails = async (req, res) => {
         // Fetch course with all related data
         const courseDetails = await Course.findById(courseId)
             .populate("instructor", "-password") // remove password field
-            .populate("Category")
+            .populate("category")
             .populate({
                 path: "courseContent",
                 populate: {
-                    path: "subSections",
+                    path: "subSection",
                 },
             })
             .populate("ratingAndReviews")

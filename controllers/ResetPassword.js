@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const mailSender = require('../utils/mailSender');
 const bcrypt = require('bcrypt');
-
+const crypto=require('crypto'); 
 //resetPasswordToken
 exports.resetPasswordToken = async( req , res )=>{
    try {
@@ -21,7 +21,8 @@ exports.resetPasswordToken = async( req , res )=>{
                  message: 'Invalid email format',
              });
          }
- 
+         console.log("User type:", typeof User);
+
          const user = await  User.findOne({email:email});
          if(!user){
              return res.status(200).json({
@@ -65,7 +66,8 @@ exports.resetPasswordToken = async( req , res )=>{
         console.log(error);
         return res.status(500).json({
             success:false,
-            message:"Something went wrong, Please try again"
+            message:"Something went wrong, Please try again",
+            error:error.message
         })
    }
 }

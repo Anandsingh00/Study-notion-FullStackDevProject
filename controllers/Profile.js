@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const Profile = require("../models/Profile");
-
+const {uploadImageToCloudinary} = require("../utils/imageUploader");
 exports.deleteAccount = async (req, res) => {
     try {
         const id = req.user.id;
@@ -41,12 +41,12 @@ exports.updateProfile = async ( req , res )=>{
         //get userId
         const id = req.user.id;
         //validation
-        if(!contactNumber || !gender ||!id){
-            return res.status(400).json({
-                success:false,
-                message:"All fields are required"
-            });
-        }
+        // if(!contactNumber || !gender ||!id){
+        //     return res.status(400).json({
+        //         success:false,
+        //         message:"All fields are required"
+        //     });
+        // }
         //find profile
         const userDetails = await User.findById(id);
         const profileId = userDetails.additionalDetails;
