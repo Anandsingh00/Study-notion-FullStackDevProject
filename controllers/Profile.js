@@ -4,7 +4,7 @@ const {uploadImageToCloudinary} = require("../utils/imageUploader");
 exports.deleteAccount = async (req, res) => {
     try {
         const id = req.user.id;
-
+        console.log("ID:",id);
         const userDetails = await User.findById(id);
         if (!userDetails) {
             return res.status(400).json({
@@ -27,6 +27,7 @@ exports.deleteAccount = async (req, res) => {
         });
 
     } catch (error) {
+      console.log(error);
         return res.status(500).json({
             success: false,
             message: "Error scheduling account deletion"

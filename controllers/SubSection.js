@@ -124,11 +124,12 @@ exports.updateSubSection = async ( req , res ) => {
 exports.deleteSubSection = async (req, res) => {
     try {
         // Fetch subsectionId from URL params
-        const { subsectionId ,sectionId } = req.params;
+        // const { subsectionId ,sectionId } = req.params;
+        const { sectionId ,subSectionId } = req.body;
 
-
+        console.log(`SectionId:${sectionId} || SubSectionId:${subSectionId}`)
         // Validate IDs
-        if (!subsectionId || !sectionId) {
+        if (!subSectionId || !sectionId) {
             return res.status(400).json({
                 success: false,
                 message: "SubSection ID and Section ID are required"
@@ -138,12 +139,12 @@ exports.deleteSubSection = async (req, res) => {
         // 1. Remove subsection reference from Section
         const updatedSection = await Section.findByIdAndUpdate(
             sectionId,
-            { $pull: { subSection: subsectionId } },
+            { $pull: { subSection: subSectionId } },
             { new: true }
         ).populate("subSection");
 
         // 2. Delete SubSection document
-        const deletedSubSection = await SubSection.findByIdAndDelete(subsectionId);
+        const deletedSubSection = await SubSection.findByIdAndDelete(subSectionId);
 
         if (!deletedSubSection) {
             return res.status(404).json({
