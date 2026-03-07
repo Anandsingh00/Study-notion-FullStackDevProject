@@ -154,7 +154,7 @@ function Home() {
             </div>
 
             <TimelineSection/>
-            {/* <LearningLanguageSection/> */}
+            <LearningLanguageSection/>
 
             </div>
 

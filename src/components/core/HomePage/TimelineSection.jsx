@@ -31,7 +31,7 @@ const timeline = [
 
 const TimelineSection = () => {
   return (
-    <div>
+    <div >
         <div className='flex flex-row gap-12 mt-10 items-center'>
             
             <div className='w-[45%] flex flex-col'>
