@@ -7,7 +7,7 @@ import { CTAButton } from "./CTAButton";
 
 const LearningLanguageSection = () => {
   return (
-    <div className='mt-[150px]  '>
+    <div className='mt-[150px] min-h-screen  '>
         <div className='flex flex-col gap-5  items-center'>
 
             <div className='text-4xl font-semibold text-center'>
@@ -36,7 +36,7 @@ const LearningLanguageSection = () => {
                 />
             </div>
 
-            <div className='w-fit flex'>
+            <div className='w-fit flex mb-[100px]'>
                 <CTAButton active={true} linkto={"signup"}> 
                     Learn More
                 </CTAButton>
