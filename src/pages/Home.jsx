@@ -128,8 +128,8 @@ const Home = () => {
             />
         </div>
 
-            <ExploreMore />
       </div>
+            <ExploreMore />
 
       {/*Section 2  */}
       <div className='bg-pure-greys-5 text-richblack-700'>

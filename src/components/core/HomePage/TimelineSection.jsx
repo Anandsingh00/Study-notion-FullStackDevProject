@@ -38,10 +38,10 @@ const TimelineSection = () => {
                 {
                     timeline.map( (element , index ) => {
                         return (
-                            <div className='flex flex-row gap-6 m-8' key={index}>
+                            <div className='flex flex-row gap-6 mb-8' key={index}>
 
-                                <div className='w-[50px] h-[50px] bg-white flex items-center'>
-                                    <img src={element.Logo} alt="" />
+                                <div className='w-[50px] h-[50px] bg-white flex items-center justify-center rounded-lg'>
+                                    <img src={element.Logo} alt="" className='w-6 h-6' />
                                 </div>
                                 <div>
                                     <h2 className='font-semibold text-[18px]'>{element.Heading}</h2>

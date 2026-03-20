@@ -1,46 +1,64 @@
 import React from "react";
-import { FaUser, FaBook } from "react-icons/fa";
+import { MdPeople } from "react-icons/md";
+import { PiTreeViewFill } from "react-icons/pi";
+const CourseCard = ({ cardData, currentCard, setCurrentCard }) => {
 
-const CourseCard = ({ title, description, level, lessons, active }) => {
+  const isActive = currentCard === cardData.heading;
+
   return (
     <div
-      className={`relative w-[300px] p-6 transition-all duration-300
-        ${
-          active
-            ? "bg-white text-richblack-900 shadow-2xl"
-            : "bg-richblack-800 text-white"
-        }`}
-    >
-      {/* Highlight strip */}
-      {active && (
-        <div className="absolute right-0 top-0 h-full w-2 bg-yellow-400" />
-      )}
-
-      <h3 className="text-lg font-semibold">{title}</h3>
-
-      <p
-        className={`mt-3 text-sm leading-6 ${
-          active ? "text-richblack-600" : "text-richblack-300"
-        }`}
-      >
-        {description}
+      onClick={() => setCurrentCard(cardData.heading)}
+      className={`
+        w-[300px] h-[280px]  p-6 cursor-pointer
+        transition-all duration-300 flex flex-col justify-between
         
-      </p>
+        ${isActive 
+          ? "bg-white text-richblack-900 shadow-2xl scale-105 z-10 " 
+          : "bg-richblack-800 text-richblack-25 "
+        }
+      `}
+    >
+      {/* Top Content */}
+      <div>
+        <h3
+          className={`text-lg font-semibold mb-3 ${
+          isActive ? "text-richblack-900" : "text-richblack-25"
+          }`}
+        >
+          {cardData.heading}
+        </h3>
 
+        <p
+          className={`text-md leading-6 opacity-80 font-inter font-medium ${
+          isActive ? "text-richblack-700" : "text-richblack-400"
+          }`}
+        >
+        {cardData.description}
+        </p>
+      </div>
+
+      {/* Bottom Section */}
       <div
-        className={`mt-6 flex justify-between text-sm ${
-          active ? "text-richblack-700" : "text-richblack-400"
-        }`}
+        className={`flex justify-between items-center text-sm pt-6 border-t border-dashed 
+        ${isActive ? "border-richblack-200" : "border-richblack-400"}`}
       >
-        <div className="flex items-center gap-2">
-          <FaUser />
-          <span>{level}</span>
-        </div>
+        <p
+          className={`flex items-center gap-2 ${
+            isActive ? "text-blue-500" : "text-richblack-400"
+          }`}
+        >
+          <MdPeople size={20} />
+          {cardData.level}
+        </p>
 
-        <div className="flex items-center gap-2">
-          <FaBook />
-          <span>{lessons} Lessons</span>
-        </div>
+        <p
+          className={`flex items-center gap-2  ${
+            isActive ? "text-blue-500" : "text-richblack-400"
+          }`}
+        >
+          <PiTreeViewFill size={20} />
+          {cardData.lessonNumber} Lessons
+        </p>
       </div>
     </div>
   );
